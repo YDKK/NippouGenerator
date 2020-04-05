@@ -13,7 +13,7 @@ namespace NippouGenerator
             var path = args.FirstOrDefault();
             if (!File.Exists(path))
             {
-                Console.WriteLine("NippouGenerator v0.1");
+                Console.WriteLine("NippouGenerator v0.2");
                 Console.WriteLine("usage: NippouGenerator.exe <path>");
                 return;
             }
