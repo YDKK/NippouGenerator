@@ -13,7 +13,7 @@ namespace NippouGenerator
             var path = args.FirstOrDefault();
             if (!File.Exists(path))
             {
-                Console.WriteLine("NippouGenerator v0.2");
+                Console.WriteLine("NippouGenerator v0.3");
                 Console.WriteLine("usage: NippouGenerator.exe <path>");
                 return;
             }
@@ -32,7 +32,7 @@ namespace NippouGenerator
                     Text = line.Substring(level.Value.from.Length)
                 };
 
-                while (lastContent.Count > (int)level.Key)
+                while (lastContent.TryPeek(out var lc) && lc.Level >= level.Key)
                 {
                     lastContent.Pop();
                 }
