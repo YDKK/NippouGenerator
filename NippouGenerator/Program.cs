@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace NippouGenerator
 {
@@ -13,7 +14,7 @@ namespace NippouGenerator
             var path = args.FirstOrDefault();
             if (!File.Exists(path))
             {
-                Console.WriteLine("NippouGenerator v0.3");
+                Console.WriteLine("NippouGenerator v0.4");
                 Console.WriteLine("usage: NippouGenerator.exe <path>");
                 return;
             }
@@ -24,12 +25,15 @@ namespace NippouGenerator
 
             foreach (var line in input)
             {
-                var level = LevelDefinition.First(x => line.StartsWith(x.Value.from));
+                var level = LevelDefinition.First(x => x.Value.from.Match(line).Success);
+
+                var match = level.Value.from.Match(line);
 
                 var content = new Content
                 {
                     Level = level.Key,
-                    Text = line.Substring(level.Value.from.Length)
+                    Text = line.Substring(match.Value.Length),
+                    ExtraIndent = match.Groups.ContainsKey("extraIndent") ? match.Groups["extraIndent"].Value.Length/2: 0
                 };
 
                 while (lastContent.TryPeek(out var lc) && lc.Level >= level.Key)
@@ -86,13 +90,13 @@ namespace NippouGenerator
             文
         }
 
-        public static readonly Dictionary<Level, (string from, string to, string indent)> LevelDefinition = new Dictionary<Level, (string from, string to, string indent)>
+        public static readonly Dictionary<Level, (Regex from, string to, string indent)> LevelDefinition = new Dictionary<Level, (Regex from, string to, string indent)>
         {
-            { Level.見出し, ("# ",  "■１．", "　　　") },
-            { Level.項目,   ("## ", "（１）", "　　　") },
-            { Level.列挙1,  ("1. ", "(a) ", "　　") },
-            { Level.列挙2,  ("- ",  "- ", "　") },
-            { Level.文,     ("", "", "") },
+            { Level.見出し, (new Regex("^# "),  "■１．", "　　　") },
+            { Level.項目,   (new Regex("^## "), "（１）", "　　　") },
+            { Level.列挙1,  (new Regex(@"^\d+\. "), "(a) ", "　　") },
+            { Level.列挙2,  (new Regex("^(?<extraIndent> *)- "),  "- ", "　") },
+            { Level.文,     (new Regex("^ *"), "", "") },
         };
 
         public static readonly Dictionary<char, string> IndexNumDefinition = new Dictionary<char, string>
@@ -106,6 +110,7 @@ namespace NippouGenerator
         {
             public Level Level { get; set; }
             public string Text { get; set; }
+            public int ExtraIndent { get; set; }
             public List<Content> Children { get; set; } = new List<Content>();
         }
 
@@ -131,6 +136,8 @@ namespace NippouGenerator
             {
                 currentIndent--;
             }
+
+            currentIndent += content.ExtraIndent;
 
             var indent = "　　　　　　　　　　".Substring(0, currentIndent);
             var indent2 = indent + LevelDefinition[content.Level].indent;
@@ -161,7 +168,7 @@ namespace NippouGenerator
             indexNum = 0;
             foreach (var child in content.Children)
             {
-                if (child.Level != Level.文)
+                if (child.Level != Level.文 && child.Level != Level.列挙2)
                 {
                     indexNum++;
                 }
