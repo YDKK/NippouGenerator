@@ -101,7 +101,7 @@ namespace NippouGenerator
 
         public static readonly Dictionary<char, string> IndexNumDefinition = new Dictionary<char, string>
         {
-            {'１', "―１２３４５６７８９" },
+            {'１', "―１２３４５６７８９                 " },
             {'a', "-abcdefghijklmnopqrstuvwxyz" },
         };
 
